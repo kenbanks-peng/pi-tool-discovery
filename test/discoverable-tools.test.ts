@@ -13,9 +13,9 @@ const tool = {
 test("writes full tool metadata and returns compact XML pointers", async () => {
   const section = await createDiscoverableTools([tool], "test/session");
 
-  expect(section).toContain("<discoverable_tools>");
-  expect(section).toContain('name="search_issues"');
-  expect(section).toContain('description="Search GitHub issues by keyword and state."');
+  expect(section).toContain("<tool_discovery>");
+  expect(section).toContain('  <tool\n    name="search_issues"');
+  expect(section).toContain('    description="Search GitHub issues by keyword and state."');
 
   const location = section.match(/location="([^"]+)"/)?.[1];
   expect(location).toBeDefined();
@@ -26,11 +26,11 @@ test("writes full tool metadata and returns compact XML pointers", async () => {
   expect(content).toContain(tool.promptGuidelines[0]);
 });
 
-test("places discoverable tools in the normal tools section", () => {
-  const prompt = "Available tools:\n- read: Read files.\n\nIn addition to the tools above, more tools may exist.";
-  const section = "<discoverable_tools>\n  <tool name=\"search_issues\" location=\"/tmp/tool.md\" />\n</discoverable_tools>";
+test("places tool discovery below the tools section", () => {
+  const prompt = "<tools>\n  <tool name=\"read\" />\n</tools>\n\n<instructions>Use tools safely.</instructions>";
+  const section = "<tool_discovery>\n  <tool\n    name=\"search_issues\"\n    location=\"/tmp/tool.md\"\n  />\n</tool_discovery>";
 
   expect(injectDiscoverableTools(prompt, section)).toBe(
-    "Available tools:\n- read: Read files.\n\n<discoverable_tools>\n  <tool name=\"search_issues\" location=\"/tmp/tool.md\" />\n</discoverable_tools>\n\nIn addition to the tools above, more tools may exist.",
+    "<tools>\n  <tool name=\"read\" />\n</tools>\n\n<tool_discovery>\n  <tool\n    name=\"search_issues\"\n    location=\"/tmp/tool.md\"\n  />\n</tool_discovery>\n\n<instructions>Use tools safely.</instructions>",
   );
 });

@@ -2,13 +2,14 @@
 
 Pi Tool Discovery reduces the initial tool context for non-built-in tools. It uses Pi's native dynamic tool loading.
 
-Before the first agent request, the extension keeps `read`, direct tools, and `discover_tools` active. It defers every other active tool, including built-in tools. Pi then lists `discover_tools` in its normal **Available tools** section and adds its usage rule to **Guidelines**:
+Before the first agent request, the extension keeps all built-in tools, direct tools, and `discover_tools` active. It defers only eligible non-built-in active tools. Pi lists `discover_tools` with the built-in tools, using its full description, and adds its usage rule to **Guidelines**:
 
 - Call `discover_tools` when the active tools cannot do the required work.
-- Describe the required capability in `request`.
-- Pi adds matching tool definitions for the next response.
+- State the action and target in `request`, for example, `search the public web` or `run several shell commands`.
+- Pi gives priority to exact tool-name matches over broad words in a tool description.
+- Pi adds only the best matching tool definition for the next response. Call it again for each additional tool.
 
-This keeps the tool-discovery instructions with the normal tool guidance. Deferred tools add a compact `<discoverable_tools>` section inside the normal tools context. Each entry has the tool name, a short description, and a path to a session-temporary Markdown file. The file contains the full description, parameter schema, and tool guidelines that Pi would otherwise provide with the callable tool definition. The agent must read that file before it activates or calls the tool.
+This keeps the tool-discovery instructions with the normal tool guidance. Deferred tools add a compact `<tool_discovery>` section below `<tools>`. Each entry has the tool name, a short description, and a path to a session-temporary Markdown file. The file contains the full description, parameter schema, and tool guidelines that Pi would otherwise provide with the callable tool definition. The agent must read that file before it activates or calls the tool.
 
 ## Install
 
@@ -27,7 +28,7 @@ Use either or both optional TOML files:
 tools = ["search_issues", "deploy_preview"]
 ```
 
-Direct tools stay active when Pi made them active. `read` stays active so the agent can read a deferred tool file; `discover_tools` also stays active. A tool disabled by Pi stays disabled.
+Direct tools and all built-in tools stay active when Pi made them active. `read` stays active so the agent can read a deferred tool file. `discover_tools` is always a direct tool: it stays active and is never listed as a deferred tool. A tool disabled by Pi stays disabled.
 
 ## Extension order
 

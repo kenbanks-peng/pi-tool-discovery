@@ -18,22 +18,35 @@ export async function createDiscoverableTools(
   const entries = await Promise.all(tools.map(async (tool) => {
     const location = join(directory, `${safePathSegment(tool.name)}.md`);
     await writeFile(location, formatToolFile(tool), "utf8");
-    return `  <tool name="${escapeXml(tool.name)}" description="${escapeXml(shortDescription(tool.description))}" location="${escapeXml(location)}" />`;
+    return [
+      "  <tool",
+      `    name="${escapeXml(tool.name)}"`,
+      `    description="${escapeXml(shortDescription(tool.description))}"`,
+      `    location="${escapeXml(location)}"`,
+      "  />",
+    ].join("\n");
   }));
 
-  return `<discoverable_tools>
+  return `<tool_discovery>
 Read a tool file at its location before you activate or call that tool. The file has its complete description and parameter schema.
 ${entries.join("\n")}
-</discoverable_tools>`;
+</tool_discovery>`;
 }
 
 export function injectDiscoverableTools(systemPrompt: string, discoverableTools: string): string {
-  if (!discoverableTools || systemPrompt.includes("<discoverable_tools>")) return systemPrompt;
+  if (!discoverableTools || systemPrompt.includes("<tool_discovery>")) return systemPrompt;
 
-  const toolsSectionEnd = "\n\nIn addition to the tools above";
-  const index = systemPrompt.indexOf(toolsSectionEnd);
-  if (index === -1) return `${systemPrompt}\n\n${discoverableTools}`;
-  return `${systemPrompt.slice(0, index)}\n\n${discoverableTools}${systemPrompt.slice(index)}`;
+  const toolsEnd = "</tools>";
+  const toolsEndIndex = systemPrompt.indexOf(toolsEnd);
+  if (toolsEndIndex !== -1) {
+    const insertIndex = toolsEndIndex + toolsEnd.length;
+    return `${systemPrompt.slice(0, insertIndex)}\n\n${discoverableTools}${systemPrompt.slice(insertIndex)}`;
+  }
+
+  const fallbackSectionEnd = "\n\nIn addition to the tools above";
+  const fallbackIndex = systemPrompt.indexOf(fallbackSectionEnd);
+  if (fallbackIndex === -1) return `${systemPrompt}\n\n${discoverableTools}`;
+  return `${systemPrompt.slice(0, fallbackIndex)}\n\n${discoverableTools}${systemPrompt.slice(fallbackIndex)}`;
 }
 
 function formatToolFile(tool: ToolMetadata): string {
