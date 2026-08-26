@@ -23,7 +23,9 @@ ${entries.join("\n")}
 }
 
 export function injectDiscoverableTools(systemPrompt: string, discoverableTools: string): string {
-  if (!discoverableTools || systemPrompt.includes("<tool_discovery>")) return systemPrompt;
+  // The activate_tool guideline names this tag. Only an opening tag followed by a
+  // newline is an injected discovery section; a textual mention must not block it.
+  if (!discoverableTools || /<tool_discovery>\r?\n/.test(systemPrompt)) return systemPrompt;
 
   const toolsEnd = "</tools>";
   const toolsEndIndex = systemPrompt.indexOf(toolsEnd);

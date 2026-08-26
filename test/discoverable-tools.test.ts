@@ -28,3 +28,12 @@ test("places tool discovery below the tools section", () => {
     "<tools>\n  <tool name=\"read\" />\n</tools>\n\n<tool_discovery>\n  <tool name=\"search_issues\" />\n</tool_discovery>\n\n<instructions>Use tools safely.</instructions>",
   );
 });
+
+test("does not mistake a guideline mention for an injected discovery section", () => {
+  const prompt = "Guideline: set name to the tool name shown in <tool_discovery>.\n\nIn addition to the tools above, more instructions.";
+  const section = "<tool_discovery>\n  <tool name=\"search_issues\" />\n</tool_discovery>";
+
+  expect(injectDiscoverableTools(prompt, section)).toBe(
+    "Guideline: set name to the tool name shown in <tool_discovery>.\n\n<tool_discovery>\n  <tool name=\"search_issues\" />\n</tool_discovery>\n\nIn addition to the tools above, more instructions.",
+  );
+});
