@@ -1,5 +1,5 @@
 {
-  "name": "pi-tool-discovery",
+  "name": "@npm-ken/pi-tool-discovery",
   "version": "1.0.0",
   "type": "module",
   "scripts": {
