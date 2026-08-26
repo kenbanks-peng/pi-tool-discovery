@@ -1,5 +1,6 @@
+import { createHash } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { homedir } from "node:os";
 import { join } from "node:path";
 import type { ToolMetadata } from "./core.ts";
 
@@ -12,12 +13,12 @@ export async function createDiscoverableTools(
 ): Promise<string> {
   if (tools.length === 0) return "";
 
-  const directory = join(tmpdir(), "pi-tool-discovery", safePathSegment(sessionId));
-  await mkdir(directory, { recursive: true });
+  const directory = join(cacheDirectory(), "pi-tool-discovery", `session-${shortHash(sessionId)}`);
+  await mkdir(directory, { recursive: true, mode: 0o700 });
 
   const entries = await Promise.all(tools.map(async (tool) => {
-    const location = join(directory, `${safePathSegment(tool.name)}.md`);
-    await writeFile(location, formatToolFile(tool), "utf8");
+    const location = join(directory, `${safeFileStem(tool.name)}.md`);
+    await writeFile(location, formatToolFile(tool), { encoding: "utf8", mode: 0o600 });
     return [
       "  <tool",
       `    name="${escapeXml(tool.name)}"`,
@@ -63,8 +64,22 @@ function shortDescription(description: string): string {
     : `${firstSentence.slice(0, DESCRIPTION_LIMIT - 1).trimEnd()}…`;
 }
 
-function safePathSegment(value: string): string {
-  return Buffer.from(value).toString("base64url");
+function cacheDirectory(): string {
+  return process.env.XDG_CACHE_HOME || join(homedir(), ".cache");
+}
+
+function safeFileStem(value: string): string {
+  if (/^[A-Za-z0-9._-]+$/.test(value)) return value;
+
+  const readable = value
+    .replace(/[^A-Za-z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 64) || "tool";
+  return `${readable}-${shortHash(value)}`;
+}
+
+function shortHash(value: string): string {
+  return createHash("sha256").update(value).digest("hex").slice(0, 12);
 }
 
 function escapeXml(value: string): string {
