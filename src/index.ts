@@ -66,7 +66,7 @@ export default function toolDiscovery(pi: ExtensionAPI): void {
       }
 
       const status = activated.length > 0
-        ? `Activated: ${selected.name}. Tool definition will be available in the next response.`
+        ? `Activated: ${selected.name}.`
         : `Already active: ${selected.name}.`;
       return {
         content: [{ type: "text", text: status }],
