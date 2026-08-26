@@ -14,9 +14,9 @@ const tools: ToolMetadata[] = [
   { name: "sdk_tool", description: "Run an SDK capability.", parameters: {}, sourceInfo: { source: "sdk" } },
 ];
 
-test("selects only eligible active non-direct tools", () => {
-  expect(selectDeferredTools(tools)).toEqual([tools[0], tools[1], tools[4]]);
-  expect(selectActiveDeferredTools(tools, new Set(tools.map((tool) => tool.name)), new Set(["search_issues"])))
+test("selects active tools of every source except direct and discovery tools", () => {
+  expect(selectDeferredTools(tools)).toEqual([tools[0], tools[1], tools[2], tools[4]]);
+  expect(selectActiveDeferredTools(tools, new Set(tools.map((tool) => tool.name)), new Set(["read", "search_issues"])))
     .toEqual([tools[1], tools[4]]);
 });
 

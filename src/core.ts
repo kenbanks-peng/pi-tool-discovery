@@ -10,9 +10,7 @@ export interface ToolMetadata {
 const DISCOVERY_TOOL_NAME = "discover_tools";
 
 export function selectDeferredTools(tools: ToolMetadata[]): ToolMetadata[] {
-  return tools.filter(
-    (tool) => tool.name !== DISCOVERY_TOOL_NAME && tool.sourceInfo.source !== "builtin",
-  );
+  return tools.filter((tool) => tool.name !== DISCOVERY_TOOL_NAME);
 }
 
 export function selectActiveDeferredTools(

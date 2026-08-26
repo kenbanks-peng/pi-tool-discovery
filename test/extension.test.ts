@@ -12,12 +12,13 @@ const baseSystemPrompt = `Available tools:
 
 In addition to the tools above, you may have access to other custom tools depending on the project.`;
 
-function createPi(initialActive = ["read", "search_issues", "deploy_preview", "discover_tools"]) {
+function createPi(initialActive = ["read", "bash", "search_issues", "deploy_preview", "discover_tools"]) {
   const active = [...initialActive];
   const handlers: HandlerMap = {};
   let discoveryTool: any;
   const tools = [
     { name: "read", description: "Read files.", parameters: {}, sourceInfo: { source: "builtin" } },
+    { name: "bash", description: "Run shell commands.", parameters: {}, sourceInfo: { source: "builtin" } },
     { name: "search_issues", description: "Search GitHub issues by keyword.", parameters: {}, sourceInfo: { source: "extension" } },
     { name: "deploy_preview", description: "Deploy a preview environment.", parameters: {}, sourceInfo: { source: "extension" } },
   ];
@@ -47,6 +48,7 @@ describe("tool discovery extension", () => {
 
     expect(fixture.active).toEqual(["read", "discover_tools"]);
     expect(prompt?.systemPrompt).toContain("<discoverable_tools>");
+    expect(prompt?.systemPrompt).toContain('name="bash"');
     expect(prompt?.systemPrompt).toContain('name="search_issues"');
     expect(prompt?.systemPrompt).toContain('description="Search GitHub issues by keyword."');
     expect(prompt?.systemPrompt).toMatch(/location=".*pi-tool-discovery\//);

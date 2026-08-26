@@ -2,9 +2,9 @@
 
 **Tool discovery**: Extension behavior that keeps selected tool definitions out of the initial active-tool set and gives the agent private tool descriptions.
 
-**Direct tool**: A built-in, `discover_tools`, or allow-listed tool that stays active.
+**Direct tool**: `read`, `discover_tools`, or an allow-listed tool that stays active.
 
-**Deferred tool**: An eligible active non-built-in tool removed from the active-tool set until `discover_tools` activates it.
+**Deferred tool**: An eligible active tool, including a built-in tool, removed from the active-tool set until `discover_tools` activates it.
 
 **Tool file**: A session-temporary Markdown file with the full description, parameter schema, and guidelines for a deferred tool. It is not a Pi skill and cannot be called with `/skill:`.
 

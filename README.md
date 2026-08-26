@@ -2,7 +2,7 @@
 
 Pi Tool Discovery reduces the initial tool context for non-built-in tools. It uses Pi's native dynamic tool loading.
 
-Before the first agent request, the extension keeps built-in tools, direct tools, and `discover_tools` active. It defers the other active non-built-in tools. Pi then lists `discover_tools` in its normal **Available tools** section and adds its usage rule to **Guidelines**:
+Before the first agent request, the extension keeps `read`, direct tools, and `discover_tools` active. It defers every other active tool, including built-in tools. Pi then lists `discover_tools` in its normal **Available tools** section and adds its usage rule to **Guidelines**:
 
 - Call `discover_tools` when the active tools cannot do the required work.
 - Describe the required capability in `request`.
@@ -27,7 +27,7 @@ Use either or both optional TOML files:
 tools = ["search_issues", "deploy_preview"]
 ```
 
-Direct tools stay active when Pi made them active. Built-in tools and `discover_tools` also stay active. A tool disabled by Pi stays disabled.
+Direct tools stay active when Pi made them active. `read` stays active so the agent can read a deferred tool file; `discover_tools` also stays active. A tool disabled by Pi stays disabled.
 
 ## Extension order
 

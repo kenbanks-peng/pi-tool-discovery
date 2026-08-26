@@ -10,6 +10,7 @@ import { resolveDirectTools } from "./config.ts";
 import { createDiscoverableTools, injectDiscoverableTools } from "./discoverable-tools.ts";
 
 const DISCOVERY_TOOL_NAME = "discover_tools";
+const REQUIRED_DIRECT_TOOLS = ["read"];
 
 function asToolMetadata(tools: ReturnType<ExtensionAPI["getAllTools"]>): ToolMetadata[] {
   return tools as ToolMetadata[];
@@ -77,12 +78,13 @@ export default function toolDiscovery(pi: ExtensionAPI): void {
     sessionId = ctx.sessionManager.getSessionId();
     reconciled = false;
 
-    directTools = await resolveDirectTools(
+    const configuredDirectTools = await resolveDirectTools(
       join(getAgentDir(), "tool-discovery.toml"),
       join(ctx.cwd, CONFIG_DIR_NAME, "tool-discovery.toml"),
       ctx.isProjectTrusted(),
       (message) => ctx.ui.notify(`Tool discovery configuration warning: ${message}`, "warning"),
     );
+    directTools = new Set([...REQUIRED_DIRECT_TOOLS, ...configuredDirectTools]);
   });
 
   pi.on("before_agent_start", async (event) => {
