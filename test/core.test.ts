@@ -10,7 +10,7 @@ const tools: ToolMetadata[] = [
   { name: "search_issues", description: "Search GitHub issues by keyword and state.", parameters: { type: "object", properties: { query: { type: "string" } } }, sourceInfo: { source: "extension" } },
   { name: "deploy_preview", description: "Deploy the current project to a preview environment.", parameters: { type: "object", properties: {} }, sourceInfo: { source: "extension" } },
   { name: "read", description: "Read a file.", parameters: {}, sourceInfo: { source: "builtin" } },
-  { name: "discover_tools", description: "Find deferred tools.", parameters: {}, sourceInfo: { source: "extension" } },
+  { name: "activate_tool", description: "Activate deferred tools.", parameters: {}, sourceInfo: { source: "extension" } },
   { name: "sdk_tool", description: "Run an SDK capability.", parameters: {}, sourceInfo: { source: "sdk" } },
 ];
 

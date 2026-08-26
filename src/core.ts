@@ -7,11 +7,11 @@ export interface ToolMetadata {
   [key: string]: unknown;
 }
 
-const DISCOVERY_TOOL_NAME = "discover_tools";
+const ACTIVATION_TOOL_NAME = "activate_tool";
 
 export function selectDeferredTools(tools: ToolMetadata[]): ToolMetadata[] {
   return tools.filter(
-    (tool) => tool.name !== DISCOVERY_TOOL_NAME && tool.sourceInfo.source !== "builtin",
+    (tool) => tool.name !== ACTIVATION_TOOL_NAME && tool.sourceInfo.source !== "builtin",
   );
 }
 

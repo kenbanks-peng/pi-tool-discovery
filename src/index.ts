@@ -2,15 +2,14 @@ import { join } from "node:path";
 import { CONFIG_DIR_NAME, getAgentDir, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import {
-  findMatchingTools,
   selectActiveDeferredTools,
   type ToolMetadata,
 } from "./core.ts";
 import { resolveDirectTools } from "./config.ts";
 import { createDiscoverableTools, injectDiscoverableTools } from "./discoverable-tools.ts";
 
-const DISCOVERY_TOOL_NAME = "discover_tools";
-const DISCOVERY_TOOL_DESCRIPTION = "Select and activate one deferred tool whose primary purpose matches a required action and target.";
+const ACTIVATION_TOOL_NAME = "activate_tool";
+const ACTIVATION_TOOL_DESCRIPTION = "Activate one deferred tool by name.";
 const REQUIRED_DIRECT_TOOLS = ["read"];
 
 function asToolMetadata(tools: ReturnType<ExtensionAPI["getAllTools"]>): ToolMetadata[] {
@@ -36,41 +35,36 @@ export default function toolDiscovery(pi: ExtensionAPI): void {
   }
 
   pi.registerTool({
-    name: DISCOVERY_TOOL_NAME,
-    label: "Discover Tools",
-    description: DISCOVERY_TOOL_DESCRIPTION,
-    // Keep its complete description in Pi's standard Available tools section.
-    // A custom tool normally supplies only a short prompt snippet there.
-    promptSnippet: DISCOVERY_TOOL_DESCRIPTION,
+    name: ACTIVATION_TOOL_NAME,
+    label: "Activate Tool",
+    description: ACTIVATION_TOOL_DESCRIPTION,
+    promptSnippet: ACTIVATION_TOOL_DESCRIPTION,
     promptGuidelines: [
-      "Call discover_tools when the active tools cannot do the work. State the action and target in request, such as 'search the public web' or 'run several shell commands'. It activates only the best matching tool for the next response.",
+      "Call activate_tool when an inactive tool is needed. Set name to the tool name shown in <tool_discovery>. It activates that tool for the next response.",
     ],
     parameters: Type.Object({
-      request: Type.String({ description: "The task or capability that requires a tool" }),
+      name: Type.String({ description: "The inactive tool name to activate" }),
     }),
     async execute(_toolCallId, params) {
-      const matches = findMatchingTools(params.request, deferredTools);
-      if (matches.length === 0) {
+      const selected = deferredTools.find((tool) => tool.name === params.name);
+      if (!selected) {
         return {
-          content: [{ type: "text", text: `No deferred tools match: ${params.request}` }],
-          details: { matches: [], activated: [], alreadyActive: [] },
+          content: [{ type: "text", text: `No inactive tool is named: ${params.name}` }],
+          details: { activated: [], alreadyActive: [] },
         };
       }
 
       const active = pi.getActiveTools();
-      const selected = matches.find((tool) => !active.includes(tool.name)) ?? matches[0];
       const activated = active.includes(selected.name) ? [] : [selected.name];
       const alreadyActive = active.includes(selected.name) ? [selected.name] : [];
-      if (activated.length > 0) {
-        pi.setActiveTools([...active, selected.name]);
-      }
+      if (activated.length > 0) pi.setActiveTools([...active, selected.name]);
 
       const status = activated.length > 0
         ? `Activated: ${selected.name}.`
         : `Already active: ${selected.name}.`;
       return {
         content: [{ type: "text", text: status }],
-        details: { matches: matches.map((tool) => tool.name), activated, alreadyActive },
+        details: { activated, alreadyActive },
       };
     },
   });
