@@ -8,7 +8,7 @@ Before the first agent request, the extension keeps built-in tools, direct tools
 - Describe the required capability in `request`.
 - Pi adds matching tool definitions for the next response.
 
-This keeps the tool-discovery instructions with the normal tool guidance. Deferred tools do not add a separate XML list or private metadata files to the system prompt.
+This keeps the tool-discovery instructions with the normal tool guidance. Deferred tools add a compact `<discoverable_tools>` section inside the normal tools context. Each entry has the tool name, a short description, and a path to a session-temporary Markdown file. The file contains the full description, parameter schema, and tool guidelines that Pi would otherwise provide with the callable tool definition. The agent must read that file before it activates or calls the tool.
 
 ## Install
 

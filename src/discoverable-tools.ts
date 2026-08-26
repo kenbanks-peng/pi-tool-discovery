@@ -1,0 +1,65 @@
+import { mkdir, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import type { ToolMetadata } from "./core.ts";
+
+const DESCRIPTION_LIMIT = 120;
+
+/** Write complete callable metadata outside the prompt and return its prompt index. */
+export async function createDiscoverableTools(
+  tools: ToolMetadata[],
+  sessionId: string,
+): Promise<string> {
+  if (tools.length === 0) return "";
+
+  const directory = join(tmpdir(), "pi-tool-discovery", safePathSegment(sessionId));
+  await mkdir(directory, { recursive: true });
+
+  const entries = await Promise.all(tools.map(async (tool) => {
+    const location = join(directory, `${safePathSegment(tool.name)}.md`);
+    await writeFile(location, formatToolFile(tool), "utf8");
+    return `  <tool name="${escapeXml(tool.name)}" description="${escapeXml(shortDescription(tool.description))}" location="${escapeXml(location)}" />`;
+  }));
+
+  return `<discoverable_tools>
+Read a tool file at its location before you activate or call that tool. The file has its complete description and parameter schema.
+${entries.join("\n")}
+</discoverable_tools>`;
+}
+
+export function injectDiscoverableTools(systemPrompt: string, discoverableTools: string): string {
+  if (!discoverableTools || systemPrompt.includes("<discoverable_tools>")) return systemPrompt;
+
+  const toolsSectionEnd = "\n\nIn addition to the tools above";
+  const index = systemPrompt.indexOf(toolsSectionEnd);
+  if (index === -1) return `${systemPrompt}\n\n${discoverableTools}`;
+  return `${systemPrompt.slice(0, index)}\n\n${discoverableTools}${systemPrompt.slice(index)}`;
+}
+
+function formatToolFile(tool: ToolMetadata): string {
+  const guidelines = tool.promptGuidelines?.length
+    ? `\n\n## Guidelines\n\n${tool.promptGuidelines.map((guideline) => `- ${guideline}`).join("\n")}`
+    : "";
+  return `# ${tool.name}\n\n## Description\n\n${tool.description}\n\n## Parameters\n\n\`\`\`json\n${JSON.stringify(tool.parameters, null, 2)}\n\`\`\`${guidelines}\n`;
+}
+
+function shortDescription(description: string): string {
+  const firstSentence = description.match(/^.*?[.!?](?:\s|$)/)?.[0]?.trim() ?? description.trim();
+  return firstSentence.length <= DESCRIPTION_LIMIT
+    ? firstSentence
+    : `${firstSentence.slice(0, DESCRIPTION_LIMIT - 1).trimEnd()}…`;
+}
+
+function safePathSegment(value: string): string {
+  return Buffer.from(value).toString("base64url");
+}
+
+function escapeXml(value: string): string {
+  return value.replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&apos;",
+  })[character] ?? character);
+}

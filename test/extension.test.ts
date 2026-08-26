@@ -3,8 +3,14 @@ import toolDiscovery from "../src/index.ts";
 
 interface HandlerMap {
   session_start?: (event: unknown, ctx: unknown) => Promise<void>;
-  before_agent_start?: () => void;
+  before_agent_start?: (event: { systemPrompt: string }) => Promise<{ systemPrompt: string }>;
 }
+
+const baseSystemPrompt = `Available tools:
+- read: Read files.
+- discover_tools: Find tools.
+
+In addition to the tools above, you may have access to other custom tools depending on the project.`;
 
 function createPi(initialActive = ["read", "search_issues", "deploy_preview", "discover_tools"]) {
   const active = [...initialActive];
@@ -37,9 +43,17 @@ describe("tool discovery extension", () => {
     const fixture = createPi();
     toolDiscovery(fixture.pi as never);
     await fixture.handlers.session_start?.({}, sessionContext("test-session"));
-    fixture.handlers.before_agent_start?.();
+    const prompt = await fixture.handlers.before_agent_start?.({ systemPrompt: baseSystemPrompt });
 
     expect(fixture.active).toEqual(["read", "discover_tools"]);
+    expect(prompt?.systemPrompt).toContain("<discoverable_tools>");
+    expect(prompt?.systemPrompt).toContain('name="search_issues"');
+    expect(prompt?.systemPrompt).toContain('description="Search GitHub issues by keyword."');
+    expect(prompt?.systemPrompt).toMatch(/location=".*pi-tool-discovery\//);
+    expect(prompt?.systemPrompt).toContain("Read a tool file at its location before you activate or call that tool.");
+    expect(prompt?.systemPrompt.indexOf("<discoverable_tools>")).toBeLessThan(
+      prompt?.systemPrompt.indexOf("In addition to the tools above") ?? 0,
+    );
     expect(fixture.getDiscoveryTool().promptSnippet)
       .toBe("Find progressively disclosed tools when active tools cannot do the required work");
     expect(fixture.getDiscoveryTool().promptGuidelines)
@@ -54,7 +68,7 @@ describe("tool discovery extension", () => {
     const fixture = createPi();
     toolDiscovery(fixture.pi as never);
     await fixture.handlers.session_start?.({}, sessionContext("test-later-start"));
-    fixture.handlers.before_agent_start?.();
+    await fixture.handlers.before_agent_start?.({ systemPrompt: baseSystemPrompt });
     await fixture.getDiscoveryTool().execute("call", { request: "deploy preview" });
 
     expect(fixture.active).toEqual(["read", "discover_tools", "deploy_preview"]);
@@ -66,7 +80,7 @@ describe("tool discovery extension", () => {
     const fixture = createPi(["read", "search_issues", "discover_tools"]);
     toolDiscovery(fixture.pi as never);
     await fixture.handlers.session_start?.({}, sessionContext("test-disabled"));
-    fixture.handlers.before_agent_start?.();
+    await fixture.handlers.before_agent_start?.({ systemPrompt: baseSystemPrompt });
 
     const result = await fixture.getDiscoveryTool().execute("call", { request: "deploy preview" });
     expect(result.details).toEqual({ matches: [], activated: [], alreadyActive: [] });

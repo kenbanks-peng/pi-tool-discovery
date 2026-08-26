@@ -7,6 +7,7 @@ import {
   type ToolMetadata,
 } from "./core.ts";
 import { resolveDirectTools } from "./config.ts";
+import { createDiscoverableTools, injectDiscoverableTools } from "./discoverable-tools.ts";
 
 const DISCOVERY_TOOL_NAME = "discover_tools";
 
@@ -17,6 +18,8 @@ function asToolMetadata(tools: ReturnType<ExtensionAPI["getAllTools"]>): ToolMet
 export default function toolDiscovery(pi: ExtensionAPI): void {
   let deferredTools: ToolMetadata[] = [];
   let directTools = new Set<string>();
+  let discoverableTools = "";
+  let sessionId = "unknown-session";
   let reconciled = false;
 
   function deferActiveTools(): void {
@@ -70,6 +73,8 @@ export default function toolDiscovery(pi: ExtensionAPI): void {
 
   pi.on("session_start", async (_event, ctx) => {
     deferredTools = [];
+    discoverableTools = "";
+    sessionId = ctx.sessionManager.getSessionId();
     reconciled = false;
 
     directTools = await resolveDirectTools(
@@ -80,10 +85,12 @@ export default function toolDiscovery(pi: ExtensionAPI): void {
     );
   });
 
-  pi.on("before_agent_start", () => {
+  pi.on("before_agent_start", async (event) => {
     if (!reconciled) {
       deferActiveTools();
+      discoverableTools = await createDiscoverableTools(deferredTools, sessionId);
       reconciled = true;
     }
+    return { systemPrompt: injectDiscoverableTools(event.systemPrompt, discoverableTools) };
   });
 }
