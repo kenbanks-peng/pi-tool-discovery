@@ -3,7 +3,7 @@ import { createDiscoverableTools, injectDiscoverableTools } from "../src/discove
 
 const tool = {
   name: "search_issues",
-  description: "Search GitHub issues by keyword and state. Supports repository filters.",
+  description: "Search GitHub issues by keyword and state. Supports repository filters. Returns matching issue metadata.",
   parameters: { type: "object", properties: { query: { type: "string" } } },
   promptGuidelines: ["Use search_issues to find GitHub issues."],
   sourceInfo: { source: "extension" },
@@ -14,8 +14,9 @@ test("returns a compact tool index without file pointers", async () => {
 
   expect(section).toContain("<tool_discovery>");
   expect(section).toContain('  <tool\n    name="search_issues"');
-  expect(section).toContain('    description="Search GitHub issues by keyword and state."');
-  expect(section).toContain("Call activate_tool with the exact name");
+  expect(section).toContain('    description="Search GitHub issues by keyword and state. Supports repository filters."');
+  expect(section).not.toContain("Returns matching issue metadata.");
+  expect(section).toContain("Here are tools available for use after they are activated using activate_tool.");
   expect(section).not.toContain("location=");
   expect(section).not.toContain("Read a tool file at its location");
 });

@@ -1,6 +1,6 @@
 import type { ToolMetadata } from "./core.ts";
 
-const DESCRIPTION_LIMIT = 120;
+const DESCRIPTION_LIMIT = 200;
 
 /** Return a compact prompt index for inactive tools. */
 export async function createDiscoverableTools(
@@ -17,7 +17,7 @@ export async function createDiscoverableTools(
   ].join("\n"));
 
   return `<tool_discovery>
-Inactive tools are listed below. Their descriptions are sufficient to select a tool. Call activate_tool with the exact name; do not read a tool-description file.
+Here are tools available for use after they are activated using activate_tool.
 ${entries.join("\n")}
 </tool_discovery>`;
 }
@@ -41,10 +41,11 @@ export function injectDiscoverableTools(systemPrompt: string, discoverableTools:
 }
 
 function shortDescription(description: string): string {
-  const firstSentence = description.match(/^.*?[.!?](?:\s|$)/)?.[0]?.trim() ?? description.trim();
-  return firstSentence.length <= DESCRIPTION_LIMIT
-    ? firstSentence
-    : `${firstSentence.slice(0, DESCRIPTION_LIMIT - 1).trimEnd()}…`;
+  const sentences = description.match(/.*?[.!?](?:\s|$)/g) ?? [description];
+  const summary = sentences.slice(0, 2).join("").trim();
+  return summary.length <= DESCRIPTION_LIMIT
+    ? summary
+    : `${summary.slice(0, DESCRIPTION_LIMIT - 1).trimEnd()}…`;
 }
 
 function escapeXml(value: string): string {

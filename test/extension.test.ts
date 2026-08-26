@@ -53,7 +53,7 @@ describe("tool discovery extension", () => {
     expect(prompt?.systemPrompt).toContain('name="search_issues"');
     expect(prompt?.systemPrompt).toContain('description="Search GitHub issues by keyword."');
     expect(prompt?.systemPrompt).not.toContain("location=");
-    expect(prompt?.systemPrompt).toContain("Call activate_tool with the exact name");
+    expect(prompt?.systemPrompt).toContain("Here are tools available for use after they are activated using activate_tool.");
     expect(fixture.getActivationTool().description).toBe("Activate one deferred tool by name.");
     expect(fixture.getActivationTool().promptSnippet).toBe("Activate one deferred tool by name.");
     expect(fixture.getActivationTool().promptGuidelines).toEqual([
